@@ -11,8 +11,10 @@
 *.dll
 *.so
 *.dylib
+*.yaml
 # add .idea folder
 .idea/
+
 
 # Test binary, built with `go test -c`
 *.test
