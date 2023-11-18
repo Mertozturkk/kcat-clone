@@ -12,6 +12,16 @@ spec:
         mountPath: /mnt/data
       ports:
       - containerPort: 80
+      # This is the volume we defined earlier
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 80
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        failureThreshold: 8
+        exec:
+          command: ["ls", "-l", "/mnt/data"]
   volumes:
     - name: pod-volume
       persistentVolumeClaim:

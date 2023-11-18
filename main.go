@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
+
 	file := os.Args[1]
 
 	data, err := os.ReadFile(file)
@@ -15,11 +16,21 @@ func main() {
 	}
 
 	// decode yaml
-	var v map[string]interface{}
+	var v yaml.Node
 	if err := yaml.Unmarshal(data, &v); err != nil {
 		panic(err)
 	}
 
-	// print type
-	// fmt.Printf("%T\n", v) -> map[string]interface {}
+	if len(v.Content) == 0 {
+		panic("No yaml docs found")
+	}
+
+	content := v.Content[0]
+
+	// encode yaml
+	enc := yaml.NewEncoder(os.Stdout)
+	enc.SetIndent(2)
+	if err := enc.Encode(content); err != nil {
+		panic(err)
+	}
 }
