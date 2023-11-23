@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/fatih/color"
 	"gopkg.in/yaml.v3"
 	"os"
+	"regexp"
 )
 
 func main() {
@@ -29,14 +32,37 @@ func main() {
 	content := v.Content[0]
 
 	colorizeKeys(content)
+	colorizeComments(content)
 
 	// encode yaml
-	enc := yaml.NewEncoder(os.Stdout)
+	var buf bytes.Buffer
+	enc := yaml.NewEncoder(&buf)
 	enc.SetIndent(2)
-	if err := enc.Encode(content); err != nil {
-		panic(err)
-	}
+	enc.Encode(content)
 
+	fmt.Println(render(buf))
+}
+
+func mark(in string) string {
+	re := regexp.MustCompile(`(?m)^#(.*)`)
+	return re.ReplaceAllString(in, "#COMMENT_$1")
+}
+
+func colorizeComments(node *yaml.Node) {
+	for _, child := range node.Content {
+		colorizeComments(child)
+	}
+}
+func render(buf bytes.Buffer) string {
+	s := buf.String()
+	// render keys
+	re := regexp.MustCompile(`(?m)(KEY_)([^:]+)`)
+	s = re.ReplaceAllString(s, color.RedString("$2$3"))
+
+	// render comments
+	s = regexp.MustCompile(`(?m)(#)(COMMENT_)(.*$)`).ReplaceAllString(s, color.YellowString("$1$3"))
+
+	return s
 }
 func colorizeKeys(node *yaml.Node) {
 
@@ -45,7 +71,7 @@ func colorizeKeys(node *yaml.Node) {
 			continue
 		}
 		if i%2 == 0 && child.Value != "" {
-			child.Value = color.WhiteString(child.Value)
+			child.Value = "KEY_" + child.Value
 		}
 		colorizeKeys(child)
 	}
